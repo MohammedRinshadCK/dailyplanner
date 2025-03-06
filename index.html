@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Planner - Circular Day Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .planner-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+        }
+
+        .timeline-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rotate 60s linear infinite;
+        }
+
+        .time-block {
+            position: absolute;
+            width: 120px;
+            left: 50%;
+            top: -10px;
+            transform-origin: 50% 310px;
+            transition: all 0.3s ease;
+        }
+
+        .time-block:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+
+        .time-label {
+            background: #e94560;
+            padding: 8px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .task-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+        }
+
+        .current-time {
+            position: absolute;
+            width: 4px;
+            height: 40%;
+            background: #e94560;
+            left: 50%;
+            bottom: 50%;
+            transform-origin: bottom;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.8);
+        }
+
+        .center-circle {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: #16213e;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="planner-container">
+        <div class="timeline-circle"></div>
+        <div class="current-time" id="currentTime"></div>
+        <div class="center-circle" id="currentHour">12 PM</div>
+        <div id="timeBlocks"></div>
+    </div>
+
+    <script>
+        const hours = [
+            '12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM',
+            '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM',
+            '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
+            '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'
+        ];
+
+        const timeBlocks = document.getElementById('timeBlocks');
+        
+        hours.forEach((hour, index) => {
+            const rotation = (index * 15) - 90;
+            const timeBlock = document.createElement('div');
+            timeBlock.className = 'time-block';
+            timeBlock.style.transform = `rotate(${rotation}deg)`;
+            
+            timeBlock.innerHTML = `
+                <div class="time-label">${hour}</div>
+                <input type="text" class="task-input" 
+                       data-hour="${index}" 
+                       placeholder="Add task...">
+            `;
+            
+            timeBlocks.appendChild(timeBlock);
+        });
+
+        // Update current time indicator
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const rotation = ((hours * 30) + (minutes * 0.5)) - 90;
+            
+            document.getElementById('currentTime').style.transform = 
+                `rotate(${rotation}deg)`;
+            document.getElementById('currentHour').textContent = 
+                `${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })}`;
+        }
+
+        // Save tasks to localStorage
+        document.querySelectorAll('.task-input').forEach(input => {
+            input.value = localStorage.getItem(`task-${input.dataset.hour}`) || '';
+            
+            input.addEventListener('change', () => {
+                localStorage.setItem(`task-${input.dataset.hour}`, input.value);
+            });
+        });
+
+        // Update time every second
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

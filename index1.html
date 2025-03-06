@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .time-block {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hour {
+            width: 80px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .event {
+            flex: 1;
+            margin: 0 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .save-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+
+        .past {
+            background-color: #f3f3f3;
+        }
+
+        .present {
+            background-color: #ff6961;
+        }
+
+        .future {
+            background-color: #77dd77;
+        }
+
+        #currentDay {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Daily Planner</h1>
+            <div id="currentDay"></div>
+        </div>
+        <div id="timeBlocks"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current day
+            const currentDay = document.getElementById('currentDay');
+            currentDay.textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Business hours (9 AM to 5 PM)
+            const workHours = Array.from({length: 9}, (_, i) => i + 9);
+            const timeBlocks = document.getElementById('timeBlocks');
+            const currentHour = new Date().getHours();
+
+            // Generate time blocks
+            workHours.forEach(hour => {
+                const timeBlock = document.createElement('div');
+                timeBlock.className = `time-block ${getTimeStatus(hour)}`;
+                
+                const displayHour = hour > 12 ? hour - 12 : hour;
+                const amPm = hour >= 12 ? 'PM' : 'AM';
+
+                timeBlock.innerHTML = `
+                    <div class="hour">${displayHour} ${amPm}</div>
+                    <textarea class="event" id="event-${hour}">${getSavedEvent(hour)}</textarea>
+                    <button class="save-btn" data-hour="${hour}">Save</button>
+                `;
+
+                timeBlocks.appendChild(timeBlock);
+            });
+
+            // Add save event listeners
+            document.querySelectorAll('.save-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const hour = this.dataset.hour;
+                    const event = document.getElementById(`event-${hour}`).value;
+                    localStorage.setItem(`event-${hour}`, event);
+                    alert('Event saved!');
+                });
+            });
+
+            function getTimeStatus(hour) {
+                if (hour < currentHour) return 'past';
+                if (hour === currentHour) return 'present';
+                return 'future';
+            }
+
+            function getSavedEvent(hour) {
+                return localStorage.getItem(`event-${hour}`) || '';
+            }
+
+            // Update time status every minute
+            setInterval(() => {
+                document.querySelectorAll('.time-block').forEach(block => {
+                    const blockHour = parseInt(block.querySelector('.save-btn').dataset.hour);
+                    block.className = `time-block ${getTimeStatus(blockHour)}`;
+                });
+            }, 60000);
+        });
+    </script>
+</body>
+</html>
